@@ -31,14 +31,14 @@ class ActionDataset(Dataset):
 
         total_frames = data_game.shape[0]
 
-        label_matrix = np.zeros((total_frames, self.num_classes))
+        label_vector = np.zeros((total_frames,), dtype=np.int64)
 
         for frame_idx, event in frame_index2action.items():
             class_idx = constants.class2target[event]
             if frame_idx < total_frames:
-                label_matrix[frame_idx, class_idx] = 1
+                label_vector[frame_idx] = class_idx
 
         features = torch.tensor(data_game, dtype=torch.float32)
-        labels = torch.tensor(label_matrix, dtype=torch.float32)
+        labels = torch.tensor(label_vector, dtype=torch.long)
 
         return features, labels
