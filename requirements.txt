@@ -5,3 +5,4 @@ torch-geometric
 numpy
 SoccerNet
 scikit-learn
+tqdm

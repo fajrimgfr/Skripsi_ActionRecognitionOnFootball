@@ -9,5 +9,6 @@ class LSTMActionSpotting(nn.Module):
 
     def forward(self, x):
         out, _ = self.lstm(x)
-        logits = self.classifier(out)
+        center_frame = out[:, out.size(1) // 2, :]
+        logits = self.classifier(center_frame)
         return logits

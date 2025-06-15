@@ -1,6 +1,6 @@
-batch_size = 2
-num_epochs = 10
+batch_size = 4
+num_epochs = 20
 learning_rate = 3e-4
 device = "cuda"
 stages = "train"
-fixed_length = 5400
+context = 9

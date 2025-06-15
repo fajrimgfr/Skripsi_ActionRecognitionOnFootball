@@ -5,9 +5,10 @@ from torch.utils.data import Dataset
 from pathlib import Path
 from src import constants
 from configs import action
+import random
 
 class ActionDataset(Dataset):
-    def __init__(self, data, context=9, num_classes=constants.num_classes):
+    def __init__(self, data, context=action.context, num_classes=constants.num_classes):
         self.samples = []
         self.num_classes = num_classes
         self.context = context
@@ -29,12 +30,19 @@ class ActionDataset(Dataset):
 
             background_frames = list(all_frames - near_event)
 
-            for f in sorted(near_event):
-                label = constants.class2target.get(frame_index2action.get(str(f), "No-event"), 0)
+            for f in sorted(event_frames):
+                label = constants.class2target.get(frame_index2action.get(f, "No-event"), 0)
                 self.samples.append((data_path, f, label))
 
-            for f in sorted(background_frames):
+            num_event = len(event_frames)
+            num_background = len(background_frames)
+
+            background_frames_sampled = random.sample(background_frames, min(num_event, num_background))
+
+            for f in sorted(background_frames_sampled):
                 self.samples.append((data_path, f, 0))
+
+        random.shuffle(self.samples)
 
     def __len__(self):
         return len(self.samples)
