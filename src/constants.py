@@ -49,7 +49,6 @@ split2games = {
 }
 
 classes = [
-    "No-event",
     "Penalty",
     "Kick-off",
     "Goal",

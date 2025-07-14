@@ -8,57 +8,42 @@ from configs import action
 import random
 
 class ActionDataset(Dataset):
-    def __init__(self, data, context=action.context, num_classes=constants.num_classes):
+    def __init__(self, data, sequence=action.sequence, num_classes=constants.num_classes):
         self.samples = []
         self.num_classes = num_classes
-        self.context = context
+        self.sequence = sequence
 
         for item in data:
             data_path = item["data_path"]
             frame_index2action = item["frame_index2action"]
-            total_frames = np.load(data_path).shape[0]
+            data_game = np.load(data_path)
+            total_frames = data_game.shape[0]
 
-            event_frames = set(map(int, frame_index2action.keys()))
-            all_frames = set(range(total_frames))
+            # Convert action label to integer index (optional: cache beforehand)
+            frame_index2target = {
+                int(frame): constants.class2target.get(label, 0)
+                for frame, label in frame_index2action.items()
+            }
 
-            near_event = set()
-            for frame_idx in event_frames:
-                for offset in range(-context, context + 1):
-                    f = frame_idx + offset
-                    if 0 <= f < total_frames:
-                        near_event.add(f)
+            # Sliding window
+            stride = int(0.5 * sequence)
+            for start in range(0, total_frames - sequence + 1, stride):
+                end = start + sequence
 
-            background_frames = list(all_frames - near_event)
+                labelList = [0] * num_classes
+                for frame in range(start, end):
+                    if frame in frame_index2target:
+                        label_idx = frame_index2target[frame]
+                        labelList[label_idx] = 1
 
-            for f in sorted(event_frames):
-                label = constants.class2target.get(frame_index2action.get(f, "No-event"), 0)
-                self.samples.append((data_path, f, label))
-
-            num_event = len(event_frames)
-            num_background = len(background_frames)
-
-            background_frames_sampled = random.sample(background_frames, min(num_event, num_background))
-
-            for f in sorted(background_frames_sampled):
-                self.samples.append((data_path, f, 0))
-
-        random.shuffle(self.samples)
+                self.samples.append((data_path, start, labelList))
 
     def __len__(self):
         return len(self.samples)
 
     def __getitem__(self, idx):
-        data_path, center_idx, label = self.samples[idx]
+        data_path, start, label = self.samples[idx]
         data_game = np.load(data_path)
+        window = data_game[start:start + self.sequence]
 
-        start = center_idx - self.context
-        end = center_idx + self.context + 1
-
-        feat_dim = data_game.shape[1]
-        window = np.zeros((2 * self.context + 1, feat_dim), dtype=np.float32)
-
-        for i, f in enumerate(range(start, end)):
-            if 0 <= f < data_game.shape[0]:
-                window[i] = data_game[f]
-
-        return torch.tensor(window), torch.tensor(label)
+        return torch.tensor(window, dtype=torch.float32), torch.tensor(label, dtype=torch.float32)

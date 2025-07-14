@@ -7,8 +7,8 @@ from src import constants
 from configs import action
 
 test_games = get_data(constants.test_games)
-pred_dir = "./data/experiments/predictions/lstm_1"
-context = action.context
+pred_dir = "./data/experiments/predictions/lstm_3"
+sequence = action.sequence
 
 all_labels = []
 all_preds = []
@@ -51,7 +51,7 @@ for game in test_games:
 
     near_event = set()
     for idx in event_indices:
-        for offset in range(-context, context + 1):
+        for offset in range(-sequence, sequence + 1):
             f = idx + offset
             if 0 <= f < total_frames:
                 near_event.add(f)
