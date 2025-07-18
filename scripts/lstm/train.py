@@ -2,12 +2,12 @@ import torch
 from torch.utils.data import DataLoader
 from torch.optim import Adam
 import torch.nn as nn
-from sklearn.metrics import accuracy_score, average_precision_score, classification_report
+from sklearn.metrics import accuracy_score, average_precision_score, classification_report, f1_score
 from sklearn.utils.class_weight import compute_class_weight
 import numpy as np
 from src import constants
 from src.annotations import get_data
-from src.datasets import ActionDataset
+from src.datasets import ActionDataset, ActionDatasetSMOTE
 from src.sliding_window_datasets import SlidingWindowDataset
 from src.sampler import BalancedFrameSampler
 from src.models.lstm_model import LSTMActionSpotting
@@ -21,11 +21,11 @@ learning_rate = action.learning_rate
 train_games = get_data(constants.train_games)
 val_games = get_data(constants.valid_games)
 
-train_dataset = ActionDataset(train_games)
+train_dataset = ActionDatasetSMOTE(train_games)
 val_dataset = ActionDataset(val_games)
 
-train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, pin_memory=True)
+val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, pin_memory=True)
 
 device = torch.device(action.device)
 model = LSTMActionSpotting().to(device)
@@ -62,11 +62,11 @@ for epoch in range(num_epochs):
         for features, labels in tqdm(val_loader, desc=f"Epoch {epoch+1} [Val]"):
             features = features.float().to(device)
             labels = labels.float().to(device)
-            logits_2d = model(features)
-            loss = criterion(logits_2d, labels_1d)
+            logits = model(features)
+            loss = criterion(logits, labels)
             val_loss += loss.item()
 
-            probs = torch.sigmoid(logits_2d)
+            probs = torch.sigmoid(logits)
             preds = (probs > 0.5).int().cpu().numpy()
             all_preds.append(preds)
             all_labels.append(labels.cpu().numpy())
