@@ -6,11 +6,13 @@ from sklearn.metrics import accuracy_score, average_precision_score, classificat
 from sklearn.utils.class_weight import compute_class_weight
 import numpy as np
 from src import constants
-from src.annotations import get_data
-from src.datasets import ActionDataset, ActionDatasetSMOTE
+from src.annotations import get_data, get_videos_sampling_weights
+from src.datasets import TrainActionDataset, ValActionDataset
 from src.sliding_window_datasets import SlidingWindowDataset
 from src.sampler import BalancedFrameSampler
 from src.models.lstm_model import LSTMActionSpotting
+from src.indexes import StackIndexesGenerator, FrameIndexShaker
+from src.target import MaxWindowTargetsProcessor
 from configs import action
 from tqdm import tqdm
 
@@ -21,20 +23,43 @@ learning_rate = action.learning_rate
 train_games = get_data(constants.train_games)
 val_games = get_data(constants.valid_games)
 
-train_dataset = ActionDatasetSMOTE(train_games)
-val_dataset = ActionDataset(val_games)
+indexes_generator = StackIndexesGenerator(
+    action.sequence,
+    action.step,
+)
+frame_index_shaker = FrameIndexShaker(action.shifts, action.weights, action.prob)
 
-train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, pin_memory=True)
+videos_sampling_weights = get_videos_sampling_weights(
+    # train_games, action.action_window_size, action.action_prob,  action.action_weights
+    train_games, action.action_window_size, action.action_prob
+)
+
+targets_processor = MaxWindowTargetsProcessor(
+        window_size=action.sequence
+    )
+
+train_dataset = TrainActionDataset(train_games, constants.classes, indexes_generator, videos_sampling_weights, targets_processor, frame_index_shaker)
+val_dataset = ValActionDataset(val_games, constants.classes, indexes_generator, videos_sampling_weights, targets_processor, frame_index_shaker)
+
+train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False, pin_memory=True)
 val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, pin_memory=True)
 
 device = torch.device(action.device)
 model = LSTMActionSpotting().to(device)
+
+resume_training = False
+checkpoint_path = "./best_model.pth"
 
 optimizer = Adam(model.parameters(), lr=learning_rate)
 best_val_loss = float('inf')
 save_path = "./best_model.pth"
 
 criterion = nn.BCEWithLogitsLoss()
+
+if resume_training and os.path.exists(checkpoint_path):
+    checkpoint = torch.load(checkpoint_path, map_location=device)
+    model.load_state_dict(checkpoint)
+    print("Loaded pretrained model from checkpoint.")
 
 for epoch in range(num_epochs):
     model.train()
@@ -84,5 +109,10 @@ for epoch in range(num_epochs):
 
     if avg_val_loss < best_val_loss:
         best_val_loss = avg_val_loss
-        torch.save(model.state_dict(), save_path)
+        torch.save({
+            'epoch': epoch,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'val_loss': best_val_loss
+        }, save_path)
         print(f"Saved best model at epoch {epoch+1} with val loss {best_val_loss:.4f}")

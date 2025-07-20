@@ -76,3 +76,6 @@ target2class: dict[int, str] = {trg: cls for trg, cls in enumerate(classes)}
 class2target: dict[str, int] = {cls: trg for trg, cls in enumerate(classes)}
 
 video_fps = 2
+
+num_halves = 2
+halves = list(range(1, num_halves + 1))

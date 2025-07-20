@@ -3,7 +3,7 @@ import torch.nn as nn
 from src import constants
 
 class LSTMActionSpotting(nn.Module):
-    def __init__(self, input_dim=512, hidden_dim=256, num_classes=constants.num_classes, num_layers=1, dropout=0.2):
+    def __init__(self, input_dim=512, hidden_dim=256, num_classes=constants.num_classes, num_layers=2, dropout=0.2):
         super(LSTMActionSpotting, self).__init__()
         self.lstm = nn.LSTM(
             input_size=input_dim,
