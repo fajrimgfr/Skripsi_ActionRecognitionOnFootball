@@ -47,7 +47,7 @@ class TrainActionDataset(Dataset):
         video_index = random.randrange(0, self.num_videos)
         frame_index = np.random.choice(self.videos_frame_indexes[video_index],
                                        p=self.videos_sampling_weights[video_index])
-        save_zone = 1
+        save_zone = 0
         if self.frame_index_shaker is not None:
             save_zone += max(abs(sh) for sh in self.frame_index_shaker.shifts)
         frame_index = self.indexes_generator.clip_index(

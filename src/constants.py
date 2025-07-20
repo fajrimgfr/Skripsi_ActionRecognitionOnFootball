@@ -5,6 +5,7 @@ from pathlib import Path
 
 work_dir = Path(".")
 soccernet_dir = work_dir / "data" / "soccernet" / "ResNET"
+prediction_dir = work_dir / "data" / "experiments" / "predictions" / "lstm"
 
 valid_games = [
     'england_epl/2015-2016/2016-01-23 - 20-30 West Ham 2 - 2 Manchester City',
@@ -79,3 +80,9 @@ video_fps = 2
 
 num_halves = 2
 halves = list(range(1, num_halves + 1))
+
+postprocess_params = {
+    "gauss_sigma": 3.0,
+    "height": 0.2,
+    "distance": 15,
+}
