@@ -30,8 +30,8 @@ indexes_generator = StackIndexesGenerator(
 frame_index_shaker = FrameIndexShaker(action.shifts, action.weights, action.prob)
 
 videos_sampling_weights = get_videos_sampling_weights(
-    # train_games, action.action_window_size, action.action_prob,  action.action_weights
-    train_games, action.action_window_size, action.action_prob
+    train_games, action.action_window_size, action.action_prob,  action.action_weights
+    # train_games, action.action_window_size, action.action_prob
 )
 
 targets_processor = MaxWindowTargetsProcessor(
@@ -48,11 +48,11 @@ device = torch.device(action.device)
 model = LSTMActionSpotting().to(device)
 
 resume_training = False
-checkpoint_path = "./best_model.pth"
+checkpoint_path = "./2_stack_.pth"
 
 optimizer = Adam(model.parameters(), lr=learning_rate)
 best_val_loss = float('inf')
-save_path = "./best_model.pth"
+save_path = "./2_stack_9fps.pth"
 
 criterion = nn.BCEWithLogitsLoss()
 

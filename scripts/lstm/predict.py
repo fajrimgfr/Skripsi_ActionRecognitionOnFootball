@@ -17,7 +17,9 @@ logger = logging.getLogger(__name__)
 INDEX_SAVE_ZONE = 0
 
 model = LSTMActionSpotting().to(action.device)
-model.load_state_dict(torch.load("./2_stack.pth", map_location=action.device))
+checkpoint = torch.load("./2_stack_huhu.pth", map_location=action.device)
+print(checkpoint.keys())
+model.load_state_dict(checkpoint["model_state_dict"])
 model.eval()
 
 save_dir = constants.prediction_dir
@@ -77,7 +79,7 @@ for game in test_games:
                 if set(predict_indexes) <= set(frame_index2frame.keys()):
                     with torch.no_grad():
                         features = np.stack([game_data[i] for i in predict_indexes])
-                        prediction = torch.from_numpy(features).unsqueeze(0).float().to(device)
+                        prediction = torch.from_numpy(features).unsqueeze(0).float().to(action.device)
                         prediction = model(prediction)
                         prediction_transform = nn.Sigmoid()
                         prediction = prediction_transform(prediction)
@@ -104,6 +106,6 @@ for game in test_games:
         print("Raw predictions saved to", raw_predictions_path)
         class2actions = raw_predictions_to_actions(frame_indexes, raw_predictions)
 
-        half2class_actions[half] = class_actions
+        half2class_actions[half] = class2actions
 
     prepare_game_spotting_results(half2class_actions, game, save_dir)

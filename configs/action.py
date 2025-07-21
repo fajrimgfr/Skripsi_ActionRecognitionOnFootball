@@ -3,7 +3,7 @@ num_epochs = 20
 learning_rate = 3e-4
 device = "cuda"
 stages = "train"
-sequence = 5
+sequence = 9
 step = 1
 
 shifts =[-1, 0, 1]
@@ -11,7 +11,7 @@ weights = [0.2, 0.6, 0.2]
 prob = 0.25
 
 
-action_window_size=5
+action_window_size=9
 action_prob=0.5
 action_weights={
     "Penalty": 0.244,
