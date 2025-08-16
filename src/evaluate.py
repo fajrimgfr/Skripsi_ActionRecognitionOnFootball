@@ -138,6 +138,14 @@ def evaluate(SoccerNet_path, Predictions_path, list_games, prediction_file="resu
         average_mAP(targets_numpy, detections_numpy, closests_numpy, framerate, deltas=deltas)
     )
 
+    precision, recall, precision_visible, recall_visible, precision_unshown, recall_unshown = (
+        compute_precision_recall_curve(targets_numpy, detections_numpy, closests_numpy, framerate, deltas=deltas)
+    )
+
+    # average_mAP(targets, detections, closests, framerate=2, deltas=np.arange(5)*1 + 1)
+    # compute_precision_recall_curve(targets, closests, detections, delta)
+    # precision, recall, precision_visible, recall_visible, precision_unshown, recall_unshown
+
     results = {
         "a_mAP": a_mAP,
         "a_mAP_per_class": a_mAP_per_class,
